@@ -3,7 +3,8 @@
 class CodeProcessor
 {
 public:
-  static void executeCode(const std::string &codeText);
+  static void compileAndExecute(const std::string &codeText);
+  static bool assertOutput();
 
 private:
   CodeProcessor() {}
