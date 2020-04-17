@@ -8,7 +8,7 @@ using namespace std;
 std::string prog = R"~(
 
 #include <iostream>
-
+using namespace std;
 int fib(int n) {
   if (n <= 1) return 1;
 
@@ -17,13 +17,26 @@ int fib(int n) {
 
 int main()
 {
-    std::cout << fib(15) << '\n';
+  int n;
+  while (cin >> n) {
+    cout << fib(n) << '\n';
+  }
 }
 
 )~"; // raw string literal stops here
 
 int main()
 {
-  CodeProcessor::executeCode(prog);
+  CodeProcessor::compileAndExecute(prog);
+
+  if (CodeProcessor::assertOutput())
+  {
+    cout << "CORRECT" << endl;
+  }
+  else
+  {
+    cout << "INCORRECT" << endl;
+  }
+
   return 0;
 }
