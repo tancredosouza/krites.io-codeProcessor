@@ -17,7 +17,7 @@ int fib(int n) {
 
 int main()
 {
-    std::cout << fib(10) << '\n';
+    std::cout << fib(15) << '\n';
 }
 
 )~"; // raw string literal stops here

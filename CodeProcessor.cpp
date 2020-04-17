@@ -5,8 +5,8 @@
 void CodeProcessor::executeCode(const std::string &codeText)
 {
   // save program to disk
-  std::ofstream("prog.cpp") << codeText;
+  std::ofstream("output/prog.cpp") << codeText;
 
-  system("g++ -o prog prog.cpp"); // compile
-  system("./prog");               // run
+  system("g++ -o output/prog output/prog.cpp"); // compile
+  system("./output/prog");                      // run
 }
