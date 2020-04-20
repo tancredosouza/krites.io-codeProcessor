@@ -1,35 +1,51 @@
 #include <iostream>
 #include <string>
 #include "CodeProcessor.h"
+#include <fstream>
+#include <sstream>
 
 using namespace std;
 
-// Use raw string literal for easy coding
-std::string prog = R"~(
+/*
+TODO: Binary file
 
-#include <iostream>
-using namespace std;
-int fib(int n) {
-  if (n <= 1) return 1;
+CodeProcessor
+Inputs:
+- Code file path
+- Input test file path
+- Expected output file path
 
-  return fib(n-1) + fib(n-2);
+Output:
+- True or false (Correct/incorrect)
+*/
+void printHelpMessage()
+{
+  cout << "Invalid passed arguments." << endl;
+  cout << "Make sure you're passing the arguments on the following format: " << endl;
+  cout << "execute_cpp_code [CODE FILE PATH] [CODE INPUT FILE PATH] [CODE EXPECTED OUTPUT FILE PATH]" << endl;
 }
 
-int main()
+string getTextFromFile(const string &textFilepath)
 {
-  int n;
-  while (cin >> n) {
-    cout << fib(n) << '\n';
+  std::ifstream t(textFilepath);
+  std::stringstream buffer;
+  buffer << t.rdbuf();
+
+  return buffer.str();
+}
+
+int main(int argc, char *argv[])
+{
+  if (argc != 4)
+  {
+    printHelpMessage();
+    exit(1);
   }
-}
 
-)~"; // raw string literal stops here
+  CodeProcessor::compileCodeToExec(getTextFromFile(argv[1]));
+  CodeProcessor::runExecWithInput(argv[2]);
 
-int main()
-{
-  CodeProcessor::compileAndExecute(prog);
-
-  if (CodeProcessor::assertOutput())
+  if (CodeProcessor::assertCorrectOutput(argv[3]))
   {
     cout << "CORRECT" << endl;
   }
