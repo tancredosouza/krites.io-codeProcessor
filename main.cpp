@@ -30,17 +30,16 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  CodeProcessor::compileCodeToExec(getTextFromFile(argv[1]));
-  CodeProcessor::runExecWithInput(argv[2]);
+  const string codeFilepath = argv[1];
+  CodeProcessor::compileCodeToExec(getTextFromFile(codeFilepath));
 
-  if (CodeProcessor::assertCorrectOutput(argv[3]))
-  {
-    cout << "CORRECT" << endl;
-  }
-  else
-  {
-    cout << "INCORRECT" << endl;
-  }
+  const string inputFilepath = argv[2];
+  CodeProcessor::runExecWithInput(inputFilepath);
+
+  const string expectedOutputFilepath = argv[3];
+  bool outputIsCorrect = CodeProcessor::assertCorrectOutput(expectedOutputFilepath);
+
+  cout << outputIsCorrect << endl;
 
   return 0;
 }
