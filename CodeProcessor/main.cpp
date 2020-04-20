@@ -41,5 +41,7 @@ int main(int argc, char *argv[])
 
   cout << outputIsCorrect << endl;
 
+  CodeProcessor::deleteOutputDirectory();
+
   return 0;
 }

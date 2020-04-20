@@ -35,3 +35,8 @@ bool CodeProcessor::assertCorrectOutput(const std::string &expectedResultFilepat
 
   return isEmptyFile("./output/d.txt");
 }
+
+void CodeProcessor::deleteOutputDirectory()
+{
+  std::filesystem::remove_all(OUTPUT_DIRECTORY_NAME);
+}
