@@ -6,18 +6,6 @@
 
 using namespace std;
 
-/*
-TODO: Binary file
-
-CodeProcessor
-Inputs:
-- Code file path
-- Input test file path
-- Expected output file path
-
-Output:
-- True or false (Correct/incorrect)
-*/
 void printHelpMessage()
 {
   cout << "Invalid passed arguments." << endl;
