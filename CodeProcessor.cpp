@@ -12,7 +12,7 @@ void CodeProcessor::compileCodeToExec(const std::string &CODE_RAW_TEXT)
   std::filesystem::create_directory(OUTPUT_DIRECTORY_NAME);
   std::ofstream(PROGRAM_FILEPATH) << CODE_RAW_TEXT;
 
-  const std::string compileCodeCmd = "g++ -o " + EXEC_FILEPATH + " " + PROGRAM_FILEPATH;
+  const std::string compileCodeCmd = "g++ -std=c++17 -o " + EXEC_FILEPATH + " " + PROGRAM_FILEPATH;
   system(compileCodeCmd.c_str());
 }
 
