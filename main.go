@@ -46,7 +46,7 @@ func run() string {
 	cmd.Stdin, _ = os.Open("./input/input.txt")
 	var out bytes.Buffer
 	cmd.Stdout = &out
-	var done = make(chan string)
+	var done = make(chan struct{})
 
 	go func(){
 		err := cmd.Start()
@@ -54,6 +54,11 @@ func run() string {
 			log.Fatal("Error running command", cmd, err)
 		}
 		cmd.Wait()
+		done <- struct{}{}
+	}()
+
+	select {
+	case <-done:
 		ioutil.WriteFile("./output/actualResult.txt", out.Bytes(), 0644)
 
 		cmd := exec.Command("diff", "./output/actualResult.txt", "./input/expected_result.txt")
@@ -64,19 +69,14 @@ func run() string {
 		cmd.Run()
 
 		ioutil.WriteFile("./output/d.txt", out.Bytes(), 0644)
+		x := isFileEmpty( "./output/d.txt")
+		//os.RemoveAll("./output")
 
-		if(isFileEmpty( "./output/d.txt")) {
-			done <- "CORRETO"
+		if(x) {
+			return "CORRETO"
 		} else {
-			done <- "INCORRETO"
+			return "INCORRETO"
 		}
-
-		os.RemoveAll("./output")
-	}()
-
-	select {
-	case res := <-done:
-		return res
 	case <-time.After(2 * time.Second):
 		cmd.Process.Kill()
 		return "TIME LIMIT EXCEEDED"
