@@ -19,7 +19,7 @@ func createDirectory(directoryName string) {
 	if os.IsNotExist(err) {
 		errDir := os.MkdirAll(directoryName, 0755)
 		if errDir != nil {
-			log.Fatal(err)
+			log.Fatal("Error creating directory", err)
 		}
 	}
 }
@@ -42,7 +42,7 @@ func RunCmdWithInput(execFilepath string, inputFilepath string, outputFilepath s
 
 	err := cmd.Run()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error running command", cmd, err)
 
 	}
 	ioutil.WriteFile(outputFilepath, out.Bytes(), 0644)
@@ -52,7 +52,7 @@ func isFileEmpty(filepath string) bool {
 	file, err := os.Stat(filepath)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error checking if file is empty", filepath, err)
 	}
 
 	return file.Size() == 0
@@ -64,15 +64,12 @@ func AssertCorrectOutput(actualFilepath string, expectedFilepath string) bool {
 	var out bytes.Buffer
 	cmd.Stdout = &out
 
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
+	cmd.Run()
 
-	}
 	ioutil.WriteFile("./output/d.txt", out.Bytes(), 0644)
 
 	ans := isFileEmpty( "./output/d.txt");
 
-	os.RemoveAll("./output")
+	//os.RemoveAll("./output")
 	return ans
 }
