@@ -13,17 +13,6 @@ func CompileCodeExecutable(codeFilepath string) {
 	RunCommand("g++", "-std=c++17", "-o", "./output/prog", codeFilepath);
 }
 
-func createDirectory(directoryName string) {
-	_, err := os.Stat(directoryName)
-
-	if os.IsNotExist(err) {
-		errDir := os.MkdirAll(directoryName, 0755)
-		if errDir != nil {
-			log.Fatal("Error creating directory", err)
-		}
-	}
-}
-
 func RunCommand(exe string, args ...string) {
 	cmd := exec.Command(exe, args...)
 

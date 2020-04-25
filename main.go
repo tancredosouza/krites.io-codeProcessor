@@ -5,44 +5,64 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/exec"
+	"strconv"
 	"time"
 )
 
-func handleSubmission(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.Error(w, "404 not found.", http.StatusNotFound)
+func main() {
+	http.HandleFunc("/", handleRequest)
+	fmt.Printf("Starting server for HTTP POST...\n")
+
+	err := http.ListenAndServe(":8080", nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func handleRequest(resWriter http.ResponseWriter, request *http.Request) {
+	if request.URL.Path != "/" {
+		http.Error(resWriter, "404 not found.", http.StatusNotFound)
 		return
 	}
-	setCorsHeaders(&w)
-	switch r.Method {
-	case "POST":
-		log.Println("Recebi uma request!")
-		// Call ParseForm() to parse the raw query and update r.PostForm and r.Form.
-		if err := r.ParseForm(); err != nil {
-			fmt.Fprintf(w, "ParseForm() err: %v", err)
-			return
-		}
-		bodyBytes, _ := ioutil.ReadAll(r.Body)
-		ioutil.WriteFile("./input/codeTest.cpp", bodyBytes, 0644)
 
-		res := run()
-		fmt.Fprintf(w, res)
+	setCorsHeaders(&resWriter)
+
+	switch request.Method {
+	case "POST":
+		log.Println("Request received!")
+
+		bodyBytes, _ := ioutil.ReadAll(request.Body)
+		rand.Seed(time.Now().Unix())
+		var submissionId int = rand.Intn(10000000)
+		ioutil.WriteFile("./input/codeTest_" + strconv.Itoa(submissionId) + ".cpp", bodyBytes, 0644)
+		res := run(submissionId)
+		fmt.Fprintf(resWriter, res)
 	default:
-		fmt.Fprintf(w, "Sorry, only GET and POST methods are supported.")
+		fmt.Fprintf(resWriter, "Sorry, only the POST method is supported.")
 	}
 }
 
-func setCorsHeaders(w *http.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Headers", "*")
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+
+func createDirectory(directoryName string) {
+	_, err := os.Stat(directoryName)
+
+	if os.IsNotExist(err) {
+		errDir := os.MkdirAll(directoryName, 0755)
+		if errDir != nil {
+			log.Fatal("Error creating directory", err)
+		}
+	}
 }
 
-func run() string {
-	CompileCodeExecutable("./input/codeTest.cpp")
-	cmd := exec.Command("./output/prog")
+func run(submissionId int) string {
+	createDirectory("./output")
+	RunCommand("g++", "-std=c++17", "-o", "./output/prog_"+strconv.Itoa(submissionId), "./input/codeTest_" + strconv.Itoa(submissionId) + ".cpp");
+
+	cmd := exec.Command("./output/prog_" + strconv.Itoa(submissionId))
 	cmd.Stdin, _ = os.Open("./input/input.txt")
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -59,35 +79,31 @@ func run() string {
 
 	select {
 	case <-done:
-		ioutil.WriteFile("./output/actualResult.txt", out.Bytes(), 0644)
+		ioutil.WriteFile("./output/actualResult_" + strconv.Itoa(submissionId) + ".txt", out.Bytes(), 0644)
 
-		cmd := exec.Command("diff", "./output/actualResult.txt", "./input/expected_result.txt")
+		cmd := exec.Command("diff", "./output/actualResult_" + strconv.Itoa(submissionId) + ".txt", "./input/expected_result.txt")
 
 		var out bytes.Buffer
 		cmd.Stdout = &out
 
 		cmd.Run()
 
-		ioutil.WriteFile("./output/d.txt", out.Bytes(), 0644)
-		x := isFileEmpty( "./output/d.txt")
+		ioutil.WriteFile("./output/d_" + strconv.Itoa(submissionId) + ".txt", out.Bytes(), 0644)
+		x := isFileEmpty( "./output/d_" + strconv.Itoa(submissionId) + ".txt")
 		//os.RemoveAll("./output")
 
 		if(x) {
-			return "CORRETO"
+			return "CORRECT"
 		} else {
-			return "INCORRETO"
+			return "INCORRECT"
 		}
 	case <-time.After(2 * time.Second):
 		cmd.Process.Kill()
-		return "TIME LIMIT EXCEEDED"
+		return "TLE"
 	}
 }
 
-func main() {
-	http.HandleFunc("/", handleSubmission)
-
-	fmt.Printf("Starting server for testing HTTP POST...\n")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatal(err)
-	}
+func setCorsHeaders(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Headers", "*")
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
