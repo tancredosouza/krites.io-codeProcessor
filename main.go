@@ -38,8 +38,7 @@ func handleRequest(resWriter http.ResponseWriter, request *http.Request) {
 		bodyBytes, _ := ioutil.ReadAll(request.Body)
 		rand.Seed(time.Now().Unix())
 		var submissionId int = rand.Intn(10000000)
-		ioutil.WriteFile("./input/codeTest_" + strconv.Itoa(submissionId) + ".cpp", bodyBytes, 0644)
-		res := run(submissionId)
+		res := run(bodyBytes, submissionId)
 		fmt.Fprintf(resWriter, res)
 	default:
 		fmt.Fprintf(resWriter, "Sorry, only the POST method is supported.")
@@ -58,11 +57,14 @@ func createDirectory(directoryName string) {
 	}
 }
 
-func run(submissionId int) string {
-	createDirectory("./output")
-	RunCommand("g++", "-std=c++17", "-o", "./output/prog_"+strconv.Itoa(submissionId), "./input/codeTest_" + strconv.Itoa(submissionId) + ".cpp");
+func run(dataReceived []byte, submissionId int) string {
+	var outputDirectory string = "submission_" + strconv.Itoa(submissionId)
 
-	cmd := exec.Command("./output/prog_" + strconv.Itoa(submissionId))
+	createDirectory("./" + outputDirectory)
+	ioutil.WriteFile("./"+ outputDirectory + "/codeTest.cpp", dataReceived, 0644)
+	RunCommand("g++", "-std=c++17", "-o", "./" + outputDirectory + "/prog", "./"+ outputDirectory +"/codeTest.cpp");
+
+	cmd := exec.Command("./"+ outputDirectory +"/prog")
 	cmd.Stdin, _ = os.Open("./input/input.txt")
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -79,18 +81,18 @@ func run(submissionId int) string {
 
 	select {
 	case <-done:
-		ioutil.WriteFile("./output/actualResult_" + strconv.Itoa(submissionId) + ".txt", out.Bytes(), 0644)
+		ioutil.WriteFile("./" + outputDirectory + "/actualResult.txt", out.Bytes(), 0644)
 
-		cmd := exec.Command("diff", "./output/actualResult_" + strconv.Itoa(submissionId) + ".txt", "./input/expected_result.txt")
+		cmd := exec.Command("diff", "./" + outputDirectory + "/actualResult.txt", "./input/expected_result.txt")
 
 		var out bytes.Buffer
 		cmd.Stdout = &out
 
 		cmd.Run()
 
-		ioutil.WriteFile("./output/d_" + strconv.Itoa(submissionId) + ".txt", out.Bytes(), 0644)
-		x := isFileEmpty( "./output/d_" + strconv.Itoa(submissionId) + ".txt")
-		//os.RemoveAll("./output")
+		ioutil.WriteFile("./" + outputDirectory + "/d.txt", out.Bytes(), 0644)
+		x := isFileEmpty( "./" + outputDirectory + "/d.txt")
+		os.RemoveAll("./" + outputDirectory)
 
 		if(x) {
 			return "CORRECT"
