@@ -106,6 +106,7 @@ func run(dataReceived []byte, submissionId int) string {
 		}
 	case <-time.After(2 * time.Second):
 		cmd.Process.Kill()
+		os.RemoveAll("./" + outputDirectory)
 		return "Time Limit Exceeded."
 	}
 }
