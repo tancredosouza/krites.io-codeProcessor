@@ -95,13 +95,13 @@ func run(dataReceived []byte, submissionId int) string {
 		os.RemoveAll("./" + outputDirectory)
 
 		if(x) {
-			return "CORRECT"
+			return "Correct!"
 		} else {
-			return "INCORRECT"
+			return "Incorrect."
 		}
 	case <-time.After(2 * time.Second):
 		cmd.Process.Kill()
-		return "TLE"
+		return "Time Limit Exceeded."
 	}
 }
 
