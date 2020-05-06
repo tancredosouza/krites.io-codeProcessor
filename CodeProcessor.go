@@ -13,13 +13,11 @@ func CompileCodeExecutable(codeFilepath string) {
 	RunCommand("g++", "-std=c++17", "-o", "./output/prog", codeFilepath);
 }
 
-func RunCommand(exe string, args ...string) {
+func RunCommand(exe string, args ...string) error {
 	cmd := exec.Command(exe, args...)
 
 	err := cmd.Run()
-	if err != nil {
-		log.Fatal("Error running command", cmd, err)
-	}
+	return err
 }
 
 func RunCmdWithInput(execFilepath string, inputFilepath string, outputFilepath string) {

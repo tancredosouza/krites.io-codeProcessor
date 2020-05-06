@@ -62,7 +62,12 @@ func run(dataReceived []byte, submissionId int) string {
 
 	createDirectory("./" + outputDirectory)
 	ioutil.WriteFile("./"+ outputDirectory + "/codeTest.cpp", dataReceived, 0644)
-	RunCommand("g++", "-std=c++17", "-o", "./" + outputDirectory + "/prog", "./"+ outputDirectory +"/codeTest.cpp");
+	err := RunCommand("g++", "-std=c++17", "-o", "./" + outputDirectory + "/prog", "./"+ outputDirectory +"/codeTest.cpp");
+
+	if (err != nil) {
+		os.RemoveAll("./" + outputDirectory)
+		return "Compilation or Execution error!"
+	}
 
 	cmd := exec.Command("./"+ outputDirectory +"/prog")
 	cmd.Stdin, _ = os.Open("./input/input.txt")
