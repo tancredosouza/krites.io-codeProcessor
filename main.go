@@ -1,50 +1,59 @@
 package main
 
 import (
-	"bytes"
-	"fmt"
-	"io/ioutil"
 	"log"
-	"math/rand"
 	"net/http"
 	"os"
+
+	"bytes"
+	"io/ioutil"
+	"math/rand"
 	"os/exec"
 	"strconv"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/gin-contrib/cors"
 )
 
 func main() {
-	http.HandleFunc("/", handleRequest)
-	fmt.Printf("Starting server for HTTP POST...\n")
+	port := os.Getenv("PORT")
 
-	err := http.ListenAndServe(":8080", nil)
-	if err != nil {
-		log.Fatal(err)
+	if port == "" {
+		log.Fatal("$PORT must be set")
 	}
+
+	router := gin.New()
+	router.Use(gin.Logger())
+
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowHeaders:     []string{"*"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge: 12 * time.Hour,
+	}))
+
+	router.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.tmpl.html", nil)
+	})
+
+	router.POST("/evaluate", func (c *gin.Context) { evaluateCode(c) })
+
+	router.Run(":" + port)
 }
 
-func handleRequest(resWriter http.ResponseWriter, request *http.Request) {
-	if request.URL.Path != "/" {
-		http.Error(resWriter, "404 not found.", http.StatusNotFound)
-		return
-	}
+func evaluateCode(c *gin.Context) {
+	buf := make([]byte, 1024)
+	num, _ := c.Request.Body.Read(buf)
+	reqBody := string(buf[0:num])
 
-	setCorsHeaders(&resWriter)
-
-	switch request.Method {
-	case "POST":
-		log.Println("Request received!")
-
-		bodyBytes, _ := ioutil.ReadAll(request.Body)
-		rand.Seed(time.Now().Unix())
-		var submissionId int = rand.Intn(10000000)
-		res := run(bodyBytes, submissionId)
-		fmt.Fprintf(resWriter, res)
-	default:
-		fmt.Fprintf(resWriter, "Sorry, only the POST method is supported.")
-	}
+	var submissionId int = rand.Intn(10000000)
+	
+	res := run([]byte(reqBody), submissionId)
+	log.Println("answer ---- ", res)
+	c.String(http.StatusOK, res)
 }
-
 
 func createDirectory(directoryName string) {
 	_, err := os.Stat(directoryName)
@@ -59,10 +68,12 @@ func createDirectory(directoryName string) {
 
 func run(dataReceived []byte, submissionId int) string {
 	var outputDirectory string = "submission_" + strconv.Itoa(submissionId)
-
+	log.Println(string(dataReceived))
 	createDirectory("./" + outputDirectory)
-	ioutil.WriteFile("./"+ outputDirectory + "/codeTest.cpp", dataReceived, 0644)
-	err := RunCommand("g++", "-std=c++17", "-o", "./" + outputDirectory + "/prog", "./"+ outputDirectory +"/codeTest.cpp");
+	log.Println("--------------- Directory created!!!!")
+	ioutil.WriteFile("./"+ outputDirectory + "/codeTest.c", dataReceived, 0644)
+	log.Println("--------------- Output file written!!!!")
+	err := RunCommand("g++", "-o", "./" + outputDirectory + "/prog", "./"+ outputDirectory +"/codeTest.c");
 
 	if (err != nil) {
 		os.RemoveAll("./" + outputDirectory)
@@ -109,9 +120,4 @@ func run(dataReceived []byte, submissionId int) string {
 		os.RemoveAll("./" + outputDirectory)
 		return "Time Limit Exceeded."
 	}
-}
-
-func setCorsHeaders(w *http.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Headers", "*")
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
