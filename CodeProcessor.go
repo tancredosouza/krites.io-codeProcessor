@@ -10,13 +10,17 @@ import (
 
 func CompileCodeExecutable(codeFilepath string) {
 	createDirectory("./output")
-	RunCommand("g++", "-std=c++17", "-o", "./output/prog", codeFilepath);
+	RunCommand("g++", "-std=c++17", "-v", "-o", "./output/prog", codeFilepath);
 }
 
 func RunCommand(exe string, args ...string) error {
 	cmd := exec.Command(exe, args...)
 
 	err := cmd.Run()
+	if (err != nil) {
+		log.Println("output")
+		log.Println(cmd.Stdout)
+	}
 	return err
 }
 
