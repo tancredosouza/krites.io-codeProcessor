@@ -25,7 +25,7 @@ def handleSubmission():
     content = request.get_json()
     submissionDir = temporarilyStoreCodeFile(content["submitted_code"])
     err_type, err_body = compileAndRun(submissionDir)
-    shutil.rmtree(submissionDir)
+    # shutil.rmtree(submissionDir)
     return buildMsg(err_type, err_body)
 
 
@@ -44,7 +44,7 @@ def compileAndRun(submissionDir):
     codeFilepath = os.path.join(submissionDir, CODE_FILENAME)
     try:
         subprocess.check_output(
-            ('g++', '-o', 'a.out', codeFilepath),
+            ('g++', '-o', f'{submissionDir}/a.out', codeFilepath),
             stdin=subprocess.DEVNULL,
             stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
@@ -53,10 +53,10 @@ def compileAndRun(submissionDir):
     try:
         with open('input/input.txt') as infile, open(f'{submissionDir}/output.txt', 'w') as outfile:
             subprocess.run(
-                './a.out',
+                f'{submissionDir}/a.out',
                 stdin=infile,
                 stdout=outfile,
-                stderr=subprocess.STDOUT,
+                shell=True,
                 universal_newlines=True,
             )
             return (Error.NO_ERROR if filecmp.cmp("input/expected_result.txt", outfile.name) else Error.WRONG_ANSWER), None
@@ -68,7 +68,7 @@ def compileAndRun(submissionDir):
 
 def buildMsg(error_type, error_body):
     return jsonify(
-        err_type="none" if error_type == Error.NO_ERROR
+        err_type="correct" if error_type == Error.NO_ERROR
         else "wa" if error_type == Error.WRONG_ANSWER
         else "timeout" if error_type == Error.TIMEOUT
         else "compile" if error_type == Error.COMPILE
