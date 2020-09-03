@@ -1,25 +1,33 @@
-import subprocess
-
 from flask import Flask, request, jsonify
+import subprocess
+import filecmp
+import random
+import os
+import shutil
+
+CODE_FILENAME = "solution.cpp"
 
 app = Flask(__name__)
 
 
 @app.route('/', methods=["POST"])
-def handleRequest():
-    response = {"msg": request.args.get('text', '')}
-    content = request.get_json(silent=True)
-    tempFilepath = temporarilyStoreCodeFile(content["submitted_code"])
-    compileAndRun(tempFilepath)
-    return jsonify(response)
+def handleSubmission():
+    content = request.get_json()
+    submissionCodeFile = temporarilyStoreCodeFile(content["submitted_code"])
+    submissionDirectory = os.path.dirname(submissionCodeFile)
+    result = compileAndRun(submissionCodeFile)
+    shutil.rmtree(submissionDirectory)
+    return jsonify(result)
 
 
 def temporarilyStoreCodeFile(codeText):
-    # TODO: add random directory to be deleted after execution
-    codeFilepath = "sample.cpp"
-    textFile = open(codeFilepath, "w")
-    textFile.write(codeText)
-    textFile.close()
+    codeDirectory = f"submission_{random.randint(0,9999999)}"
+    os.mkdir(codeDirectory)
+    codeFilepath = os.path.join(codeDirectory, CODE_FILENAME)
+
+    codeFile = open(codeFilepath, "w")
+    codeFile.write(codeText)
+    codeFile.close()
     return codeFilepath
 
 
@@ -34,9 +42,7 @@ def compileAndRun(codeFilepath):
             stdin=infile,
             stdout=outfile,
             universal_newlines=True)
-
-    subprocess.run(
-        "diff -u ./input/expected_result.txt ./input/output.txt > dif.txt", shell=True)
+        return filecmp.cmp(outfile.name, "input/expected_result.txt")
 
 
 if __name__ == '__main__':
