@@ -44,26 +44,28 @@ def compileAndRun(submissionDir):
     codeFilepath = os.path.join(submissionDir, CODE_FILENAME)
     try:
         subprocess.check_output(
-            ('g++', '-o', f'{submissionDir}/a.out', codeFilepath),
+            ('g++', '-w', '-o', f'{submissionDir}/a.out', codeFilepath),
             stdin=subprocess.DEVNULL,
             stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
         return Error.COMPILE, e.output
 
     try:
-        with open('input/input.txt') as infile, open(f'{submissionDir}/output.txt', 'w') as outfile:
-            subprocess.run(
-                f'{submissionDir}/a.out',
-                stdin=infile,
-                stdout=outfile,
-                shell=True,
-                universal_newlines=True,
-            )
-            return (Error.NO_ERROR if filecmp.cmp("input/expected_result.txt", outfile.name) else Error.WRONG_ANSWER), None
+        infile = 'input/input.txt'
+        outfile = f'{submissionDir}/output.txt'
+        subprocess.run(
+            f'{submissionDir}/a.out <{infile} >{outfile}',
+            capture_output=True,
+            shell=True,
+            check=True
+        )
+
+        return (Error.NO_ERROR if filecmp.cmp("input/expected_result.txt", outfile)
+                else Error.WRONG_ANSWER), None
     except subprocess.TimeoutExpired as e:
         return Error.TIMEOUT, None
     except subprocess.CalledProcessError as e:
-        return Error.EXECUTION, e.output
+        return Error.EXECUTION, e.stderr
 
 
 def buildMsg(error_type, error_body):
