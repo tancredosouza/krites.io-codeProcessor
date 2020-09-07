@@ -7,6 +7,7 @@ import shutil
 from enum import Enum
 
 CODE_FILENAME = "solution.cpp"
+THREE_SECONDS = 3
 
 
 class Error(Enum):
@@ -25,7 +26,7 @@ def handleSubmission():
     content = request.get_json()
     submissionDir = temporarilyStoreCodeFile(content["submitted_code"])
     err_type, err_body = compileAndRun(submissionDir)
-    # shutil.rmtree(submissionDir)
+    shutil.rmtree(submissionDir)
     return buildMsg(err_type, err_body)
 
 
@@ -57,7 +58,8 @@ def compileAndRun(submissionDir):
             f'{submissionDir}/a.out <{infile} >{outfile}',
             capture_output=True,
             shell=True,
-            check=True
+            check=True,
+            timeout=THREE_SECONDS
         )
 
         return (Error.NO_ERROR if filecmp.cmp("input/expected_result.txt", outfile)
