@@ -5,6 +5,7 @@ import filecmp
 import random
 import os
 import shutil
+from CppEvaluator import CppEvaluator
 from enum import Enum
 
 CODE_FILENAME = "solution.cpp"
@@ -27,7 +28,8 @@ CORS(app)
 def handleSubmission():
     content = request.get_json()
     submissionDir = temporarilyStoreCodeFile(content["submitted_code"])
-    err_type, err_body = compileAndRun(submissionDir)
+    evaluator = CppEvaluator(submissionDir)
+    err_type, err_body = evaluator.tryCompileAndRun()
     shutil.rmtree(submissionDir)
     return buildMsg(err_type, err_body)
 
@@ -41,35 +43,6 @@ def temporarilyStoreCodeFile(codeText):
     codeFile.write(codeText)
     codeFile.close()
     return codeDir
-
-
-def compileAndRun(submissionDir):
-    codeFilepath = os.path.join(submissionDir, CODE_FILENAME)
-    try:
-        subprocess.check_output(
-            ('g++', '-w', '-o', f'{submissionDir}/a.out', codeFilepath),
-            stdin=subprocess.DEVNULL,
-            stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError as e:
-        return Error.COMPILE, e.output
-
-    try:
-        infile = 'input/input.txt'
-        outfile = f'{submissionDir}/output.txt'
-        subprocess.run(
-            f'{submissionDir}/a.out <{infile} >{outfile}',
-            capture_output=True,
-            shell=True,
-            check=True,
-            timeout=THREE_SECONDS
-        )
-
-        return (Error.NO_ERROR if filecmp.cmp("input/expected_result.txt", outfile)
-                else Error.WRONG_ANSWER), None
-    except subprocess.TimeoutExpired as e:
-        return Error.TIMEOUT, None
-    except subprocess.CalledProcessError as e:
-        return Error.EXECUTION, e.stderr
 
 
 def buildMsg(error_type, error_body):
