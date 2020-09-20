@@ -6,9 +6,10 @@ import random
 import os
 import shutil
 from CppEvaluator import CppEvaluator
+from PythonEvalutor import PythonEvaluator
 from Error import Error
 
-CODE_FILENAME = "solution.cpp"
+CODE_FILENAME = "solution"
 THREE_SECONDS = 3
 
 app = Flask(__name__)
@@ -18,24 +19,33 @@ CORS(app)
 @app.route('/', methods=["POST"])
 def handleSubmission():
     content = request.get_json()
-    # TODO: add "submitted_language" field
-    submissionDir = temporarilyStoreCodeFile(content["submitted_code"])
-    # TODO: swith-case programming language chosen -> evaluator for that programming language
-    evaluator = CppEvaluator(submissionDir)
+
+    submissionLanguage = content["submitted_language"]
+    submissionDir = temporarilyStoreCodeFile(
+        content["submitted_code"], submissionLanguage)
+
+    evaluator = chooseEvaluator(submissionDir, submissionLanguage)
     err_type, err_body = evaluator.tryCompileAndRun()
+
     shutil.rmtree(submissionDir)
+
     return buildMsg(err_type, err_body)
 
 
-def temporarilyStoreCodeFile(codeText):
+def temporarilyStoreCodeFile(codeText, language):
     codeDir = f"submission_{random.randint(0,9999999)}"
     os.mkdir(codeDir)
-    codeFilepath = os.path.join(codeDir, CODE_FILENAME)
+    codeFilepath = os.path.join(codeDir, f'{CODE_FILENAME}.{language}')
 
     codeFile = open(codeFilepath, "w")
     codeFile.write(codeText)
     codeFile.close()
     return codeDir
+
+
+def chooseEvaluator(submissionDir, submissionLanguage):
+    return CppEvaluator(submissionDir) if submissionLanguage == "cpp" else PythonEvaluator(
+        submissionDir) if submissionLanguage == "py" else None
 
 
 def buildMsg(error_type, error_body):
