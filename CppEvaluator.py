@@ -1,19 +1,11 @@
 import subprocess
 import os
-from enum import Enum
+from Error import Error
 import filecmp
 
 
 CODE_FILENAME = "solution.cpp"
 THREE_SECONDS = 3
-
-
-class Error(Enum):
-    NO_ERROR = 0
-    COMPILE = 1
-    EXECUTION = 2
-    TIMEOUT = 3
-    WRONG_ANSWER = 4
 
 
 class CppEvaluator:
@@ -44,9 +36,8 @@ class CppEvaluator:
         infile = 'input/input.txt'
         outfile = f'{self.submissionDir}/output.txt'
         subprocess.run(
-            f'{self.submissionDir}/a.out <{infile} >{outfile}',
+            [f'{self.submissionDir}/a.out', f'<{infile}', f'>{outfile}'],
             capture_output=True,
-            shell=True,
             check=True,
             timeout=THREE_SECONDS
         )

@@ -6,19 +6,10 @@ import random
 import os
 import shutil
 from CppEvaluator import CppEvaluator
-from enum import Enum
+from Error import Error
 
 CODE_FILENAME = "solution.cpp"
 THREE_SECONDS = 3
-
-
-class Error(Enum):
-    NO_ERROR = 0
-    COMPILE = 1
-    EXECUTION = 2
-    TIMEOUT = 3
-    WRONG_ANSWER = 4
-
 
 app = Flask(__name__)
 CORS(app)
@@ -27,7 +18,9 @@ CORS(app)
 @app.route('/', methods=["POST"])
 def handleSubmission():
     content = request.get_json()
+    # TODO: add "submitted_language" field
     submissionDir = temporarilyStoreCodeFile(content["submitted_code"])
+    # TODO: swith-case programming language chosen -> evaluator for that programming language
     evaluator = CppEvaluator(submissionDir)
     err_type, err_body = evaluator.tryCompileAndRun()
     shutil.rmtree(submissionDir)
