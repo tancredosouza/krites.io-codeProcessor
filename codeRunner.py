@@ -24,7 +24,7 @@ def handleSubmission():
     submissionDir = temporarilyStoreCodeFile(
         content["submitted_code"], submissionLanguage)
 
-    evaluator = chooseEvaluator(submissionDir, submissionLanguage)
+    evaluator = getEvaluator(submissionDir, submissionLanguage)
     err_type, err_body = evaluator.tryCompileAndRun()
 
     shutil.rmtree(submissionDir)
@@ -43,7 +43,7 @@ def temporarilyStoreCodeFile(codeText, language):
     return codeDir
 
 
-def chooseEvaluator(submissionDir, submissionLanguage):
+def getEvaluator(submissionDir, submissionLanguage):
     return CppEvaluator(submissionDir) if submissionLanguage == "cpp" else PythonEvaluator(
         submissionDir) if submissionLanguage == "py" else None
 
